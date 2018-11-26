@@ -2,14 +2,15 @@ const express = require('express')
 const request = require('superagent')
 
 const {userExists, createUser} = require('../db/users')
+const token = require('../auth/token')
 
 const router = express.Router()
 
 router.use(express.json())
 
-router.post('/register', register)
+router.post('/register', register, token.issue)
 
-function register (req, res) {
+function register (req, res, next) {
   console.log(req.body)
   userExists(req.body.username)
   .then(exists => {
@@ -17,7 +18,7 @@ function register (req, res) {
       return res.status(400).send({ message: 'User exists' })
     }
     createUser(req.body.username, req.body.hash)
-    .then(() => res.status(201).end())
+    .then(() => next())
   })
   .catch(err => {
     res.status(500).send({ message: err.message + "this is the catch in auth" })
